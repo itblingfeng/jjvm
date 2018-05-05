@@ -100,11 +100,16 @@ public class JvmOpcodeClass implements JvmClass {
     }
 
     @Override
-    public JvmMethod getMethod(String name, String desc) throws NoSuchMethodException {
+    public JvmMethod getMethod(String name, String desc) throws NoSuchMethodException,ClassNotFoundException {
         JvmOpcodeMethod method = methods.get(new AbstractMap.SimpleEntry<>(name, desc));
         if(method == null){
-            throw new NoSuchMethodException("method "+name+":"+ desc+" not exist");
+            if(getSuperClass() !=null)
+            method = (JvmOpcodeMethod) getSuperClass().getMethod(name,desc);
+            if(method == null){
+                throw new NoSuchMethodException("method "+name+" of "+ className+" not exist");
+            }
         }
+
         return method;
     }
 
@@ -115,9 +120,13 @@ public class JvmOpcodeClass implements JvmClass {
     }
 
     @Override
-    public JvmField getField(String name) throws NoSuchFieldException, IllegalAccessException {
+    public JvmField getField(String name) throws NoSuchFieldException, ClassNotFoundException, IllegalAccessException {
         JvmField field = fields.get(name);
         if(field == null){
+            if (getSuperClass() !=null){
+                field =  getSuperClass().getField(name);
+            }
+            if(field == null)
             throw new NoSuchFieldException("field "+name+" of "+ className+" not exist");
         }
         return field;
