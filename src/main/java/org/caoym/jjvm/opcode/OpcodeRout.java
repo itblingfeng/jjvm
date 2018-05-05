@@ -438,6 +438,76 @@ public enum OpcodeRout {
             method.call(env, thiz, Arrays.copyOfRange(argsArr,1, argsArr.length));
         }
     }
+    ,
+    IADD(Constants.IADD){
+        @Override
+        public void invoke(Env env, StackFrame frame, byte[] operands) throws Exception {
+            ArrayList<Object> vars = frame.getOperandStack().multiPop(2);
+            frame.getOperandStack().push((Integer)vars.get(0) + (Integer) vars.get(1));
+
+        }
+    }
+    ,
+    BIPUSH(Constants.BIPUSH){
+        @Override
+        public void invoke(Env env, StackFrame frame, byte[] operands) throws Exception {
+            frame.getOperandStack().push(Integer.valueOf(operands[0]));
+        }
+    },
+    ISUB(Constants.ISUB){
+        @Override
+        public void invoke(Env env, StackFrame frame, byte[] operands) throws Exception {
+            ArrayList<Object> vars = frame.getOperandStack().multiPop(2);
+            frame.getOperandStack().push((Integer)vars.get(1) - (Integer) vars.get(0));
+        }
+    }
+    ,
+    IDIV(Constants.IDIV){
+        @Override
+        public void invoke(Env env, StackFrame frame, byte[] operands) throws Exception {
+            ArrayList<Object> vars = frame.getOperandStack().multiPop(2);
+            frame.getOperandStack().push((Integer)vars.get(1)/(Integer) vars.get(0));
+        }
+    }
+    ,
+    IMUL(Constants.IMUL){
+        @Override
+        public void invoke(Env env, StackFrame frame, byte[] operands) throws Exception {
+            ArrayList<Object> vars = frame.getOperandStack().multiPop(2);
+            frame.getOperandStack().push((Integer)vars.get(0) * (Integer) vars.get(1));
+        }
+    }
+    ,
+    INVOKESTATIC(Constants.INVOKESTATIC){
+        @Override
+        public void invoke(Env env, StackFrame frame, byte[] operands) throws Exception {
+            int arg = (operands[0] << 8)| operands[1];
+            ConstantPool.CONSTANT_Methodref_info info
+                    = (ConstantPool.CONSTANT_Methodref_info)frame.getConstantPool().get(arg);
+
+            JvmClass clazz  = env.getVm().getClass(info.getClassName());
+            JvmMethod method = clazz.getMethod(
+                    info.getNameAndTypeInfo().getName(),
+                    info.getNameAndTypeInfo().getType()
+            );
+            ArrayList<Object> vars = null;
+            if(method.getParameterCount()!=0) {
+                vars = frame.getOperandStack().multiPop(method.getParameterCount());
+                Collections.reverse(vars);
+                method.call(env, clazz,vars.toArray());
+            }else{
+                method.call(env,clazz);
+            }
+
+
+        }
+    },
+    ASTORE_2(Constants.ASTORE_2){
+        @Override
+        public void invoke(Env env, StackFrame frame, byte[] operands) throws Exception {
+            frame.getLocalVariables().set(2,frame.getOperandStack().pop(),1);
+        }
+    }
     ;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
